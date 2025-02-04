@@ -40,7 +40,7 @@ class TestFixtureConfiguredALUA:
 
     ZEROS = bytearray(512)
     BLOCKS = 5
-    VERBOSE = False
+    VERBOSE = True
     NUM_TARGETS = 10
 
     def wait_for_settle(self):
