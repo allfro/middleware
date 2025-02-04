@@ -295,7 +295,7 @@ pytest_command = [
     '-m',
     'pytest'
 ] + callargs + [
-    "-o", "junit_family=xunit2",
+    "-o", "junit_family=xunit2", "-s",
     '--timeout=300',
     "--junitxml",
     'results/api_v2_tests_result.xml',
@@ -318,6 +318,16 @@ def parse_test_name_prefix_dir(test_name):
         return name
     else:
         return f"api2/{name}"
+
+
+tests = ['api2/test_001_ssh.py',
+         'api2/test_002_system_license.py',
+         'api2/test_003_network_global.py',
+         'api2/test_005_interface.py',
+         'api2/test_006_pool_and_sysds.py',
+         'api2/test_009_fenced.py',
+         'api2/test_014_failover_related.py',
+         'api2/test_262_iscsi_alua.py']
 
 if tests:
     pytest_command.extend(list(map(parse_test_name_prefix_dir, tests)))
