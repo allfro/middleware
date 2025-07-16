@@ -30,10 +30,12 @@ class NVMetSPDKService(Service):
         Allocate hugepages and bind PCI devices.
         """
         _slots = await self.slots()
+        my_env = os.environ.copy()
         if _slots:
-            my_env = os.environ.copy()
             my_env['PCI_ALLOWED'] = " ".join(_slots)
-            return await self._run_setup('config', env=my_env)
+        else:
+            my_env['PCI_ALLOWED'] = "none"
+        return await self._run_setup('config', env=my_env)
 
     async def reset(self):
         """
@@ -51,7 +53,7 @@ class NVMetSPDKService(Service):
         return await self._run_setup('cleanup')
 
     async def slots(self):
-        _nics = await self.nics()
+        _nics = await self.dedicated_nics()
         return await self.middleware.call('nvmet.spdk.pci_slots', _nics)
 
     def pci_slots(self, nics):
@@ -67,18 +69,20 @@ class NVMetSPDKService(Service):
             raise CallError("Could not find PCI slot for every NIC")
         return pci_slots
 
-    async def nics(self):
+    async def dedicated_nics(self):
         """
-        Return a list of NIC names correesponding to all configure NVMe-oF ports.
+        Return a list of NIC names corresponding to all configure dedicated NVMe-oF ports.
         """
         # Check that kernel nvmet is not enabled
         if (await self.middleware.call('nvmet.global.config'))['kernel']:
             raise CallError("NVMe-oF configured for kernel target")
 
-        # Need to obtain the PCI devices associated with configured ports
-        ports = await self.middleware.call('nvmet.port.query')
+        # Need to obtain the PCI devices associated with configured ports.
+        ports = await self.middleware.call('nvmet.port.query', [['dedicated_nic', '=', True]])
         if not ports:
-            raise CallError("No ports configured for NVMe-oF")
+            # It's OK if there are no dedicated ports configured.  That'll mean that SPDK falls
+            # back to using the regular kernel drivers for NICs.
+            return []
 
         # For the time being we only support TCP/RDMA with IPv6/IPv6
         if do_failover := await self.middleware.call('failover.licensed'):
