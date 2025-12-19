@@ -178,6 +178,7 @@ class UserPamAuthenticator(TrueNASUserPamAuthenticator):
             pam_env={'pam_truenas_session_data': dumps(session_info)}
         )
         self.otpw_possible = True
+        self._session_uuid = None
 
     def login(self) -> TrueNASAuthenticatorResponse:
         resp = super().login()
@@ -195,7 +196,6 @@ class UserPamAuthenticator(TrueNASUserPamAuthenticator):
                 # PAM stack is misconfigured (pam_truenas possibly omitted). We don't
                 # want to raise an exception here because it will make recovery impossible
                 # because middleware auth will be broken.
-                self._session_uuid = None
                 self.session_error = str(exc)
 
         return resp
