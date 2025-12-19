@@ -510,7 +510,7 @@ class AuthService(Service):
                                 'at the current security level',
                                 errno.EOPNOTSUPP)
 
-        cred = TokenSessionManagerCredentials(self.token_manager, token, auth_ctx.pam_hdl, app.origin)
+        cred = TokenSessionManagerCredentials(self.token_manager, token, auth_ctx.pam_hdl)
         pam_resp = cred.pam_authenticate()
         if pam_resp.code != PAMCode.PAM_SUCCESS:
             raise CallError(f'Failed to get token for action: {pam_resp.reason}')
